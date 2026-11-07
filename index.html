@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="新药风云">
+<title>新药风云 · 从靶点到上市 v3.6</title>
+<style>
+:root{
+  --bg:#0b0f1a; --panel:#131a29; --panel2:#182033; --line:#26314a;
+  --txt:#e8eefc; --dim:#8fa0c0; --ok:#3ddc97; --warn:#ffcf5c; --bad:#ff6b6b;
+  --brand:#4f8cff; --brand2:#7c5cff;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--txt);overscroll-behavior-y:none;
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+  background-image:radial-gradient(900px 460px at 12% -8%,#1b2744 0%,rgba(11,15,26,0) 62%);
+  background-repeat:no-repeat;
+}
+#app{padding:calc(10px + var(--safe-t)) 12px calc(96px + var(--safe-b))}
+h1{font-size:17px;margin:2px 0 10px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center}
+h1 .co{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
+h1 .ver{flex:none;font-size:11px;color:var(--dim);font-weight:400;margin-right:8px}
+h1 a{flex:none;font-size:12px;color:var(--brand);text-decoration:none;font-weight:400}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat span{display:block;font-size:11px;color:var(--dim)}
+.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.stat.bad b{color:var(--bad)}
+.stat.good b{color:var(--ok)}
+.kpi{font-size:15px;color:#fff;font-variant-numeric:tabular-nums}
+.pop{display:inline-block;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.55);opacity:.2}60%{transform:scale(1.16)}100%{transform:scale(1);opacity:1}}
+.count{font-size:12px;color:var(--dim);margin:14px 2px 8px;display:flex;justify-content:space-between;gap:8px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.card.stalled{border-color:#5b4a1f;background:linear-gradient(180deg,#241d10,#1a1509)}
+.card.over{border-color:#4f8cff;background:linear-gradient(180deg,#152344,#111a2f)}
+.card.ahead{border-color:#2f7a5c;background:linear-gradient(180deg,#12251e,#101a17)}
+.card.behind{border-color:#7a3a2f;background:linear-gradient(180deg,#271512,#1a100d)}
+.card.tap{cursor:pointer}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.code{font-size:16px;font-weight:700}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;background:#22304d;color:#a9c4ff;margin-left:6px;vertical-align:middle;font-weight:400}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.badge.ok{background:#123326;color:var(--ok)}
+.badge.warn{background:#33290f;color:var(--warn)}
+.badge.rv{background:#3a1f1a;color:#ff9b7a}
+.sub{font-size:12px;color:var(--dim);margin-top:5px}
+.barline{height:8px;background:#0e1524;border-radius:6px;overflow:hidden;margin:9px 0 6px;border:1px solid #1d2740}
+.barline i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.vs{display:grid;grid-template-columns:36px 1fr 52px;gap:8px;align-items:center;margin-top:6px;font-size:11px;color:var(--dim)}
+.vs .vs-bar{height:8px;background:#0e1524;border:1px solid #1d2740;border-radius:6px;overflow:hidden}
+.vs .vs-bar i{display:block;height:100%;transition:width .45s ease}
+.vs.me .vs-bar i{background:linear-gradient(90deg,#3ddc97,#2f9e6e)}
+.vs.rv .vs-bar i{background:linear-gradient(90deg,#ff8a5c,#e0452f)}
+.vs .vs-n{text-align:right;font-variant-numeric:tabular-nums}
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.tiers.three{grid-template-columns:repeat(3,1fr)}
+.tiers button{min-height:44px;font-size:13px;border-radius:10px;background:transparent;color:var(--dim)}
+.tiers button.on{border-color:var(--brand);background:#16305c;color:#cfe0ff;font-weight:700}
+.row{display:flex;gap:8px;margin-top:8px}
+.row button{flex:1}
+button{font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;touch-action:manipulation;cursor:pointer}
+button:active{transform:scale(.99)}
+button.primary{background:linear-gradient(180deg,#3f7bff,#2f5be0);border-color:#4f8cff;font-weight:700;color:#fff}
+button.ghost{background:transparent;color:var(--dim)}
+button:disabled{opacity:.45}
+input[type=text]{font:inherit;color:var(--txt);background:#0e1524;border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;margin:6px 0 10px}
+input[type=text]::placeholder{color:#5d6c88}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.badge-i{background:#0e1524;border:1px solid #1d2740;border-radius:12px;padding:8px 4px;text-align:center;cursor:pointer}
+.badge-i .ic{font-size:20px;display:block;line-height:1.35;filter:grayscale(1);opacity:.32}
+.badge-i .nm{font-size:10px;color:var(--dim);display:block;margin-top:2px}
+.badge-i.on{border-color:#3f7bff;background:#152344}
+.badge-i.on .ic{filter:none;opacity:1}
+.badge-i.on .nm{color:#cfe0ff}
+#log{background:#0d1424;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.6;height:96px;overflow:hidden;color:#bdcbe6}
+#log.folded{height:42px;overflow:hidden;color:var(--dim)}
+#log p{margin:0 0 4px}
+#log .g{color:var(--ok)} #log .r{color:var(--bad)} #log .y{color:var(--warn)}
+footer{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  padding:8px 12px calc(8px + var(--safe-b));background:rgba(11,15,26,.93);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+footer .primary{grid-column:1 / -1;min-height:48px;font-size:16px}
+footer button{min-height:44px;font-size:14px}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(4,7,14,.72);display:flex;align-items:flex-end;justify-content:center}
+.modal.hidden{display:none}
+.sheet{width:100%;max-height:88dvh;overflow:auto;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px 16px 0 0;padding:14px 14px calc(18px + var(--safe-b));-webkit-overflow-scrolling:touch}
+.sheet h2{font-size:16px;margin:0 0 8px}
+.opt{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#111a2b}
+.opt.on{border-color:var(--brand);background:#16305c}
+@media(min-width:760px){
+  #app{max-width:820px;margin:0 auto;padding-bottom:24px}
+  .bar{grid-template-columns:repeat(4,1fr)}
+  footer{left:50%;transform:translateX(-50%);width:100%;max-width:820px;grid-template-columns:2fr 1fr 1fr 1fr;border-radius:14px 14px 0 0}
+  footer .primary{grid-column:auto}
+  .modal{align-items:center}
+  .sheet{max-width:560px;border-radius:16px;max-height:82vh}
+  #log{height:170px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1><span class="co" id="s-co">新药风云</span><span class="ver" id="s-ver">v3.6</span><a href="javascript:openRules()">玩法说明</a></h1>
+  <div class="bar">
+    <div class="stat"><span>时间</span><b id="s-time">第 1 年 Q1</b></div>
+    <div class="stat" id="cash-box"><span>现金（亿）</span><b id="s-cash">8.00</b></div>
+    <div class="stat"><span>团队等级</span><b id="s-team">Lv1</b></div>
+    <div class="stat"><span>剩余融资轮次</span><b id="s-fin">4</b></div>
+  </div>
+  <section id="over"></section>
+  <div class="count" id="pipe-head"><span>在研管线</span><span>0/3</span></div>
+  <section id="projects"></section>
+  <section id="rival"></section>
+  <section id="market"></section>
+  <div class="count"><span>事件日志（点一下可折叠）</span><span id="exp-tip">经验加成 +0%</span></div>
+  <div id="log" class="folded" onclick="toggleLog()"></div>
+  <div class="count"><span id="stat-line">本局点击 0 次</span><span id="stat-line2">累计 0 次</span></div>
+</div>
+<footer id="bar"></footer>
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div>
+<script>
+/* ========== 小工具 ========== */
+const $ = s => document.querySelector(s);
+const rnd = n => Math.floor(Math.random() * n);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const f2 = v => (v < 0 ? '-' : '') + Math.abs(v).toFixed(2);
+const num = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtSec(sec){
+  sec = Math.max(0, Math.round(sec || 0));
+  if (sec < 60) return sec + ' 秒';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m + ' 分' + (s ? s + ' 秒' : '');
+}
+function pctOf(d, base){
+  if (!base) return '';
+  const p = d / Math.abs(base) * 100;
+  return '(' + (p >= 0 ? '+' : '') + p.toFixed(1) + '%)';
+}
+/* 数字滚动 */
+function rollTo(el, to, fmt, from){
+  if (!el) return;
+  const has = (typeof el.__cur === 'number');
+  const start = (from === undefined) ? (has ? el.__cur : to) : from;
+  if (!window.requestAnimationFrame || Math.abs(start - to) < 1e-9){
+    el.__cur = to; el.textContent = fmt(to); return;
+  }
+  if (el.__raf) cancelAnimationFrame(el.__raf);
+  const t0 = performance.now(), dur = 520;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - k, 3);
+    const v = start + (to - start) * e;
+    el.__cur = v; el.textContent = fmt(v);
+    if (k < 1){ el.__raf = requestAnimationFrame(step); }
+    else { el.__raf = null; el.__cur = to; el.textContent = fmt(to); }
+  };
+  el.__raf = requestAnimationFrame(step);
+}
+function animateSheet(){
+  document.querySelectorAll('#sheet [data-n]').forEach(el => {
+    const to = parseFloat(el.getAttribute('data-n')) || 0;
+    const k = el.getAttribute('data-k');
+    if (k === 'int') rollTo(el, to, v => num(Math.round(v)), 0);
+    else if (k === 'rank') rollTo(el, to, v => '全球药企第 ' + Math.round(v) + ' 位', 999);
+    else rollTo(el, to, v => f2(v), 0);
+  });
+}
+/* ========== 累计数据（跨局） ========== */
+const KEY = 'pharma_v3_save';
+const SKEY = 'pharma_v3_stats';
+const RKEY = 'pharma_v3_ranks';
+let STATS = {clicks:0, games:0, badges:[], legacy:0, perk:{}};
+function loadStats(){
+  try{
+    const o = JSON.parse(localStorage.getItem(SKEY) || '{}') || {};
+    STATS = {
+      clicks: Number(o.clicks) || 0,
+      games:  Number(o.games) || 0,
+      badges: Array.isArray(o.badges) ? o.badges : [],
+      legacy: Number(o.legacy) || 0,
+      perk: (o.perk && typeof o.perk === 'object') ? o.perk : {}
+    };
+  }catch(e){ STATS = {clicks:0, games:0, badges:[], legacy:0, perk:{}}; }
+}
+function saveStats(){ try{ localStorage.setItem(SKEY, JSON.stringify(STATS)); }catch(e){} }
+loadStats();
+/* ========== 配置表 ========== */
+const MAX_Q = 40, IND_COST_INIT = 0.5, RETRY_COST = 1.2, MAX_TEAM = 5;
+const DIFFS = {
+  easy:  {k:'easy',  n:'新手', pass: 0.08, cash:10, evt:0.30},
+  normal:{k:'normal',n:'标准', pass: 0.00, cash:8,  evt:0.40},
+  hard:  {k:'hard',  n:'硬核', pass:-0.07, cash:6,  evt:0.55}
+};
+const INDS = [
+  {id:'onco', n:'晚期实体瘤',        coef:0.55, peak:62, cost:1.35},
+  {id:'ad',   n:'阿尔茨海默病',      coef:0.62, peak:55, cost:1.30},
+  {id:'rare', n:'罕见病（基因治疗）', coef:0.72, peak:26, cost:1.40},
+  {id:'ra',   n:'自身免疫（类风湿）', coef:0.95, peak:40, cost:1.10},
+  {id:'dm',   n:'2 型糖尿病',        coef:1.15, peak:34, cost:0.95},
+  {id:'cv',   n:'高血脂/心血管',      coef:1.25, peak:30, cost:0.90},
+  {id:'flu',  n:'流感抗病毒',        coef:1.38, peak:18, cost:0.85},
+  {id:'hz',   n:'带状疱疹疫苗',      coef:1.70, peak:22, cost:0.80}
+];
+const STAGES = [
+  {n:'靶点发现',   base:0.51, need:2, cost:0.12, clinical:false},
+  {n:'先导优化',   base:0.66, need:3, cost:0.18, clinical:false},
+  {n:'临床前研究', base:0.69, need:2, cost:0.22, clinical:false},
+  {n:'IND 申报',   base:0.86, need:1, cost:0.12, clinical:false},
+  {n:'I 期临床',   base:0.62, need:2, cost:0.30, clinical:true},
+  {n:'II 期临床',  base:0.36, need:3, cost:0.45, clinical:true},
+  {n:'III 期临床', base:0.56, need:4, cost:0.85, clinical:true},
+  {n:'NDA 审批',   base:0.91, need:2, cost:0.28, clinical:false},
+  {n:'上市销售',   base:1.00, need:0, cost:0.00, clinical:false}
+];
+const TIERS = [
+  {k:'pause', n:'暂停',  c:0,   s:0,   p:0},
+  {k:'low',   n:'低投入', c:0.6, s:0.7, p:-0.04},
+  {k:'mid',   n:'中投入', c:1,   s:1,   p:0},
+  {k:'high',  n:'高投入', c:1.9, s:1.5, p:0.06}
+];
+const tierOf = k => TIERS.find(t => t.k === k);
+const SALES = [
+  {k:'low',  n:'低销售', rate:0.12, def:0.000},
+  {k:'mid',  n:'中销售', rate:0.20, def:0.010},
+  {k:'high', n:'高销售', rate:0.30, def:0.022}
+];
+const salesOf = k => SALES.find(t => t.k === k) || SALES[1];
+const SHARE_DECAY = 0.012;
+const MODALS = [
+  {n:'小分子',    pre:'SM'},  {n:'单克隆抗体', pre:'mAb'}, {n:'双特异性抗体', pre:'BsAb'},
+  {n:'ADC',      pre:'ADC'}, {n:'融合蛋白',   pre:'FP'},  {n:'siRNA', pre:'si'},
+  {n:'mRNA 疫苗', pre:'mR'},  {n:'细胞治疗',   pre:'CT'}
+];
+const TARGETS = ['PD-1','EGFR','KRAS G12C','TIGIT','CLDN18.2','IL-6R','PCSK9','GLP-1R',
+                 'BACE1','SGLT2','Aβ 蛋白','LAG-3','CD19','Tau 蛋白','C5 补体','VEGF-A'];
+const FIN_ROUNDS = [{amt:3.0,eq:0.10},{amt:2.5,eq:0.12},{amt:2.0,eq:0.15},{amt:1.5,eq:0.20}];
+const GRADES = [
+  {min:60,   tier:'S', rank:'传奇药企'},
+  {min:30,   tier:'A', rank:'卓越生科'},
+  {min:15,   tier:'B', rank:'优秀 Biotech'},
+  {min:6,    tier:'C', rank:'稳健经营'},
+  {min:0,    tier:'D', rank:'勉强存活'},
+  {min:-1e9, tier:'E', rank:'资不抵债'}
+];
+const ORDER = ['E','D','C','B','A','S'];
+const gradeOf = net => GRADES.find(g => net >= g.min) || GRADES[GRADES.length - 1];
+function rankPos(net){
+  if (!(net > 0)) return null;
+  return clamp(Math.round(1200 / Math.pow(1 + net / 2, 1.3)), 1, 999);
+}
+/* 竞争对手名字池 */
+const RIVAL_PRE = ['巨擎','鲲鹏','恒昱','赤霄','辰曜','博莱','安捷','纽特','泰和','万钧','启明','承光','沧澜','曜石'];
+const RIVAL_SUF = ['制药','生物','医药','生科','药业','生物技术'];
+/* ========== 成就徽章 ========== */
+const BADGES = [
+  {k:'first_go', i:'🌱', n:'初次立项', d:'完成第一次立项'},
+  {k:'launch1',  i:'🎉', n:'首次上市', d:'第一个产品获批上市'},
+  {k:'fast12',   i:'⚡', n:'闪电上市', d:'单局第 12 个季度前就有产品上市'},
+  {k:'perfect',  i:'🧪', n:'一次通关', d:'单个项目全程零失败判定并上市'},
+  {k:'streak5',  i:'🔥', n:'火热状态', d:'连续 5 次阶段判定通过'},
+  {k:'cash20',   i:'💰', n:'现金大户', d:'单局现金达到 20 亿'},
+  {k:'top100',   i:'🏆', n:'跻身百强', d:'全球药企名次进入前 100 位'},
+  {k:'gradeS',   i:'👑', n:'传奇药企', d:'单局获得 S 级评级'},
+  {k:'up3',      i:'📈', n:'连涨三局', d:'连续 3 局收益正增长'},
+  {k:'click1k',  i:'🖱', n:'指尖千次', d:'累计点击达到 1000 次'},
+  {k:'launch3',  i:'🧬', n:'管线丰富', d:'单局上市 3 个产品'},
+  {k:'rescue',   i:'🛟', n:'科研韧性', d:'复议成功挽救一个项目'},
+  {k:'game10',   i:'🌍', n:'行业老兵', d:'累计玩满 10 局'},
+  {k:'best1',    i:'🥇', n:'刷新纪录', d:'刷新本机历史榜最好成绩'},
+  {k:'first_in', i:'🏁', n:'首创新药', d:'抢先于竞争对手在同一适应症上市'},
+  {k:'beat_rv',  i:'⚔️', n:'正面对抗', d:'单局上市产品数不少于竞争对手'},
+  {k:'ahead',    i:'🚀', n:'保持领先', d:'结算时你的最快项目阶段不低于对手'}
+];
+const BHAVE = k => (STATS.badges || []).indexOf(k) >= 0;
+function unlock(k){
+  STATS.badges = STATS.badges || [];
+  if (STATS.badges.indexOf(k) >= 0) return false;
+  STATS.badges.push(k); saveStats();
+  const b = BADGES.find(x => x.k === k);
+  if (b && S){
+    if (S.over){
+      S.newBadges = S.newBadges || [];
+      if (S.newBadges.indexOf(b.n) < 0) S.newBadges.push(b.n);
+    } else {
+      log('🏅 解锁成就【' + b.n + '】：' + b.d, 'y');
+    }
+  }
+  return true;
+}
+function scanBadges(){
+  if (!S) return;
+  const r = S.result || {};
+  const t = {
+    first_go: S.projects.length > 0 || S.launched > 0 || S.fails > 0,
+    launch1:  S.launched >= 1,
+    fast12:   S.firstQ > 0 && S.firstQ <= 12,
+    perfect:  !!S.perfect,
+    streak5:  (S.okStreak || 0) >= 5,
+    cash20:   S.cash >= 20,
+    top100:   r.pos != null && r.pos <= 100,
+    gradeS:   !!S.over && r.tier === 'S',
+    click1k:  STATS.clicks >= 1000,
+    launch3:  S.launched >= 3,
+    rescue:   !!S.rescued,
+    game10:   STATS.games >= 10,
+    best1:    !!r.isRecord,
+    first_in: (S.firstIn || 0) >= 1,
+    beat_rv:  !!S.over && !!S.rival && S.launched > 0 && S.launched >= S.rival.launched,
+    ahead:    !!S.over && !!S.rival && myStage() >= rivalStage()
+  };
+  Object.keys(t).forEach(k => { if (t[k]) unlock(k); });
+  if (S.newBadges && S.newBadges.length && S.result) S.result.newBadges = S.newBadges.slice();
+}
+function badgesHTML(){
+  const own = STATS.badges || [];
+  return '<div class="badges">' + BADGES.map(b =>
+      '<div class="badge-i ' + (own.indexOf(b.k) >= 0 ? 'on' : '') + '" onclick="badgeInfo(\'' + b.k + '\')">'
+      + '<span class="ic">' + b.i + '</span><span class="nm">' + b.n + '</span></div>').join('')
+    + '</div><div class="sub">已解锁 ' + own.length + '/' + BADGES.length + ' · 点一下徽章可看解锁条件</div>';
+}
+function badgeInfo(k){
+  const b = BADGES.find(x => x.k === k);
+  if (!b) return;
+  toast((BHAVE(k) ? '✅ 已解锁：' : '🔒 未解锁：') + b.n + ' —— ' + b.d);
+}
+/* ========== 传承 ========== */
+const PERKS = [
+  {k:'cash',  n:'启动资金',     d:'每级开局现金 +2 亿',              max:3, cost:3},
+  {k:'pass',  n:'研发体系',     d:'每级全阶段基础通过率 +2%',        max:3, cost:3},
+  {k:'pick4', n:'候选分子四选一', d:'立项时从 4 个候选分子中挑选',    max:1, cost:4},
+  {k:'team2', n:'核心团队',     d:'开局团队直接就是 Lv2',            max:1, cost:5}
+];
+const perkLv = k => Number((STATS.perk || {})[k] || 0);
+let LEG_MSG = '';
+function openLegacy(){
+  const ps = STATS.legacy || 0;
+  sheetHTML('<h2>传承商店</h2>'
+    + '<div class="sub">可用传承点：<b class="kpi">' + ps + '</b> 点。每局结束按评级发放（E/D 1 点、C 2 点、B 3 点、A 5 点、S 8 点），加成永久保留、逐级叠加。</div>'
+    + (LEG_MSG ? '<div class="opt on"><div>' + LEG_MSG + '</div></div>' : '')
+    + PERKS.map(p => {
+        const cur = perkLv(p.k), full = cur >= p.max, poor = ps < p.cost;
+        return '<div class="opt ' + (cur > 0 ? 'on' : '') + '">'
+          + '<div>' + p.n + ' · Lv' + cur + '/' + p.max + '</div>'
+          + '<div class="sub">' + p.d + '</div>'
+          + '<div class="row"><button class="' + (!full && !poor ? 'primary' : '') + '" '
+          + (full || poor ? 'disabled' : '') + ' onclick="buyPerk(\'' + p.k + '\')">'
+          + (full ? '已满级' : (poor ? '传承点不足（需 ' + p.cost + ' 点）' : '升级（' + p.cost + ' 点）'))
+          + '</button></div></div>';
+      }).join('')
+    + '<div class="sub">提示：传承等级越高，新一局的竞争对手也会略微变强，保持挑战性。</div>'
+    + '<div class="row"><button class="primary" onclick="closeSheet()">关闭</button></div>');
+  LEG_MSG = '';
+}
+function buyPerk(k){
+  const p = PERKS.find(x => x.k === k);
+  if (!p) return;
+  if (perkLv(k) >= p.max) return;
+  if ((STATS.legacy || 0) < p.cost){ LEG_MSG = '传承点不足，还差 ' + (p.cost - (STATS.legacy || 0)) + ' 点。'; openLegacy(); return; }
+  STATS.legacy -= p.cost;
+  STATS.perk = STATS.perk || {};
+  STATS.perk[k] = perkLv(k) + 1;
+  saveStats();
+  LEG_MSG = '✅ ' + p.n + ' 已升级到 Lv' + STATS.perk[k] + '，下一局生效。';
+  openLegacy();
+}
+/* ========== 竞争对手 ========== */
+function stName(i){
+  if (i < 0) return '尚未立项';
+  if (i > 7) return '已上市销售';
+  return STAGES[i].n;
+}
+function genRivalProj(r){
+  const mine = S.projects.filter(p => p.status !== 'launched').map(p => p.ind);
+  let ind;
+  if (mine.length && Math.random() < 0.45) ind = mine[rnd(mine.length)];
+  else ind = INDS[rnd(INDS.length)];
+  const m = MODALS[rnd(MODALS.length)];
+  return {code: m.pre + '-' + (1000 + rnd(9000)), mod: m.n, ind,
+          stage: 0, progress: 0, speed: r.speed * (0.92 + Math.random() * 0.20)};
+}
+function genRival(){
+  const tune = ({easy:{sp:0.92,lk:0.95}, normal:{sp:1.06,lk:1.00}, hard:{sp:1.20,lk:1.05}}[S.diff.k])
+             || {sp:1.06,lk:1.00};
+  const r = {
+    name: RIVAL_PRE[rnd(RIVAL_PRE.length)] + RIVAL_SUF[rnd(RIVAL_SUF.length)],
+    speed: tune.sp + Math.min(0.14, (STATS.legacy || 0) * 0.01),
+    luck: tune.lk,
+    launched: 0, launchedInds: [], lastGap: null, proj: null
+  };
+  r.proj = genRivalProj(r);
+  return r;
+}
+function rivalStage(){
+  if (!S.rival || !S.rival.proj) return 8;
+  return S.rival.proj.stage;
+}
+function myStage(){
+  let s = -1;
+  S.projects.forEach(p => { if (p.status !== 'launched') s = Math.max(s, p.stage); });
+  if (S.marketed.length) s = Math.max(s, 8);
+  return s;
+}
+function rivalStep(L){
+  const r = S.rival;
+  if (!r || !r.proj) return;
+  const p = r.proj, st = STAGES[p.stage];
+  p.progress += p.speed * (0.82 + Math.random() * 0.42);
+  if (p.progress < (st.need || 1)) return;
+  p.progress = 0;
+  const rate = clamp(st.base * p.ind.coef * r.luck, 0.05, 0.96);
+  if (Math.random() * 100 <= rate * 100){
+    p.stage++;
+    if (p.stage >= 8){
+      const ind = p.ind;
+      r.launched++; r.launchedInds.push(ind.id);
+      L.push('⚔️ 竞品快讯：' + r.name + ' 的 ' + p.code + ' 在「' + ind.n + '」获批上市（对手第 ' + r.launched + ' 个产品）。', 'r');
+      S.marketed.forEach(m => {
+        if (m.indId === ind.id && m.comp < 4){
+          m.comp++; m.share = clamp(m.share * 0.92, 0.25, 1.10);
+          L.push('竞品 ' + p.code + ' 与你已上市的 ' + m.name + ' 短兵相接：竞品威胁 +1、份额 -8%。', 'r');
+        }
+      });
+      r.proj = genRivalProj(r);
+    } else if (p.stage >= 4 && p.stage <= 6){
+      L.push('⚔️ 竞品快讯：' + r.name + ' 的 ' + p.code + ' 推进到 ' + STAGES[p.stage].n + '。');
+    }
+  } else if (st.clinical && Math.random() < 0.5){
+    L.push('⚔️ 竞品快讯：' + r.name + ' 的 ' + p.code + ' 在 ' + st.n + ' 折戟，转身推进备选分子。', 'g');
+    r.proj = genRivalProj(r);
+  } else {
+    L.push('⚔️ 竞品快讯：' + r.name + ' 的 ' + p.code + ' 在 ' + st.n + ' 未达终点，方案回炉。');
+  }
+}
+function gapCheck(L){
+  const r = S.rival;
+  if (!r) return;
+  if (S.marketed.length > 0 || r.launched > 0) return;   /* 只在首次上市竞赛期播报 */
+  const ms = myStage(), rs = rivalStage();
+  if (ms < 0) return;
+  const gap = ms - rs;
+  if (r.lastGap != null){
+    if (r.lastGap < 0 && gap >= 0)
+      L.push('⚡ 反超！你的最快项目已在阶段上追平 ' + r.name + '（当前 ' + stName(ms) + '）。', 'g');
+    else if (r.lastGap >= 0 && gap < 0)
+      L.push('⚠️ ' + r.name + ' 重新领先你 ' + (-gap) + ' 个阶段（对手在 ' + stName(rs) + '）。', 'y');
+  }
+  r.lastGap = gap;
+}
+/* ========== 排名与本机榜 ========== */
+function loadRanks(){
+  try{
+    const a = JSON.parse(localStorage.getItem(RKEY) || '[]');
+    if (!Array.isArray(a)) return [];
+    return a.map(x => ({
+      net: Number(x && x.net) || 0,
+      rank: (x && x.rank) || '—',
+      tier: (x && x.tier) || '-',
+      pos: (x && x.pos != null) ? Number(x.pos) : null,
+      diff: (x && x.diff) || '—',
+      co: (x && x.co) || '',
+      rival: (x && x.rival) || '',
+      rvWin: x && x.rvWin ? 1 : 0,
+      launched: Number(x && x.launched) || 0,
+      q: Number(x && x.q) || 0,
+      firstQ: Number(x && x.firstQ) || 0,
+      clicks: Number(x && x.clicks) || 0,
+      sec: Number(x && x.sec) || 0,
+      ts: Number(x && x.ts) || 0
+    })).sort((a, b) => b.net - a.net).slice(0, 20);
+  }catch(e){ return []; }
+}
+function saveRank(res){
+  try{
+    const list = loadRanks();
+    const byTs = list.slice().sort((a, b) => a.ts - b.ts);
+    const prev = byTs[byTs.length - 1] || null;
+    const first = byTs[0] || null;
+    const best = list.slice().sort((a, b) => b.net - a.net)[0] || null;
+    res.isRecord = !best || res.net > best.net + 0.005;
+    const fasts = list.filter(x => x.firstQ > 0);
+    const fast = fasts.length ? Math.min.apply(null, fasts.map(x => x.firstQ)) : 0;
+    let streak = 1, last = res.net;
+    for (let i = byTs.length - 1; i >= 0; i--){
+      if (last > byTs[i].net){ streak++; last = byTs[i].net; } else break;
+    }
+    res.cmp = {
+      games: list.length + 1,
+      hasPrev: !!prev,
+      prevNet: prev ? prev.net : null,
+      prevPos: prev ? prev.pos : null,
+      prevTier: prev ? prev.tier : null,
+      prevFirstQ: prev ? prev.firstQ : 0,
+      prevCo: prev ? prev.co : '',
+      bestNet: best ? best.net : null,
+      firstNet: first ? first.net : null,
+      fastQ: fast,
+      streak: streak
+    };
+    list.push({net: res.net, rank: res.rank, tier: res.tier, pos: res.pos,
+               diff: S.diff.n, co: S.co || '',
+               rival: S.rival ? S.rival.name : '',
+               rvWin: S.rival ? (S.launched > 0 && S.launched >= S.rival.launched) : false,
+               launched: S.launched, q: res.q || S.q,
+               firstQ: res.firstQ || 0, clicks: res.clicks || 0, sec: res.sec || 0,
+               ts: Date.now()});
+    list.sort((a, b) => b.net - a.net);
+    localStorage.setItem(RKEY, JSON.stringify(list.slice(0, 20)));
+    STATS.games++; saveStats();
+    if (res.cmp.streak >= 3) unlock('up3');
+    if (res.isRecord) unlock('best1');
+  }catch(e){}
+}
+function ranksHTML(){
+  const list = loadRanks();
+  if (!list.length){
+    return '<div class="opt"><div>本机历史榜还是空的</div>'
+      + '<div class="sub">完成一局期末结算后，成绩会自动记在这里。</div></div>';
+  }
+  return '<div class="opt on"><div>本机历史榜 · 前 5 名</div><div class="sub">'
+    + list.slice(0, 5).map((x, i) =>
+        (i + 1) + '. ' + (x.co ? esc(x.co) + ' · ' : '') + x.tier + ' 级 · ' + f2(x.net) + ' 亿 · ' + x.rank
+        + (x.pos ? '（第 ' + x.pos + ' 位）' : '')
+        + ' · ' + x.diff + '难度 · 上市 ' + x.launched + ' 个'
+        + (x.rival ? ' · ' + (x.rvWin ? '胜' : '负') + esc(x.rival) : '')
+      ).join('<br>')
+    + '</div></div>';
+}
+function progressHTML(){
+  const r = S.result || {};
+  const c = r.cmp || {};
+  if (!c.games) return '';
+  const net = r.net || 0;
+  const out = [];
+  if (!c.hasPrev){
+    out.push('🎉 这是你的第 1 局，成绩已入榜。从下一局开始，就能看到自己每一局的进步。');
+  } else {
+    const d = net - (c.prevNet || 0);
+    const who = c.prevCo ? '「' + esc(c.prevCo) + '」' : '上一局';
+    if (d > 0.005) out.push('📈 收益比' + who + '高 ' + f2(d) + ' 亿 ' + pctOf(d, c.prevNet) + '。');
+    else if (d < -0.005) out.push('📉 收益比' + who + '低 ' + f2(-d) + ' 亿。试试更早上市、或给上市产品加销售投入。');
+    else out.push('收益与' + who + '基本持平。');
+    if (r.pos && c.prevPos){
+      const up = c.prevPos - r.pos;
+      if (up > 0) out.push('🏆 名次前进 ' + up + ' 位：第 ' + c.prevPos + ' 位 → 第 ' + r.pos + ' 位。');
+      else if (up < 0) out.push('名次后退 ' + (-up) + ' 位：第 ' + c.prevPos + ' 位 → 第 ' + r.pos + ' 位。');
+      else out.push('名次持平：第 ' + r.pos + ' 位。');
+    }
+    if (c.prevTier && ORDER.indexOf(r.tier) > ORDER.indexOf(c.prevTier))
+      out.push('⬆️ 评级上一档：' + c.prevTier + ' → ' + r.tier + '。');
+    if (r.firstQ && c.prevFirstQ){
+      const dq = c.prevFirstQ - r.firstQ;
+      if (dq > 0) out.push('⚡ 更快了：首个产品第 ' + r.firstQ + ' 个季度上市，比' + who + '快 ' + dq + ' 个季度。');
+      else if (dq < 0) out.push('⏳ 首个产品第 ' + r.firstQ + ' 个季度上市，比' + who + '慢 ' + (-dq) + ' 个季度。');
+      else out.push('⚡ 上市速度与' + who + '相同（第 ' + r.firstQ + ' 个季度）。');
+    } else if (r.firstQ){
+      out.push('⚡ ' + who + '没推到上市，本局第 ' + r.firstQ + ' 个季度就上市了。');
+    }
+  }
+  if (c.bestNet != null && net > c.bestNet + 0.005)
+    out.push('🥇 新纪录！刷新了本机榜最好成绩（原纪录 ' + f2(c.bestNet) + ' 亿）。');
+  if (c.streak >= 2) out.push('🔥 连续 ' + c.streak + ' 局收益正增长，思路越来越稳。');
+  if (c.games >= 2 && c.firstNet != null && net > c.firstNet + 0.005)
+    out.push('🌟 成长轨迹：第 1 局 ' + f2(c.firstNet) + ' 亿 → 本局 ' + f2(net) + ' 亿。');
+  if (!out.length) out.push('本局已记录。再开一局，把名次继续往前推。');
+  return '<h2 style="margin-top:12px">和你自己比</h2>'
+    + '<div class="opt on"><div class="sub">' + out.join('<br>') + '</div></div>';
+}
+function versusHTML(){
+  const r = S.rival;
+  if (!r) return '';
+  const res = (S.launched === 0 && r.launched === 0) ? '双方都没能推出上市产品'
+    : (S.launched > r.launched ? '🏆 你赢了：上市 ' + S.launched + ' 个 vs 对手 ' + r.launched + ' 个'
+      : (S.launched === r.launched ? '⚖️ 打平：双方各上市 ' + S.launched + ' 个'
+        : '💥 对手领先：对手上市 ' + r.launched + ' 个 vs 你 ' + S.launched + ' 个'));
+  const inds = r.launchedInds.map(id => { const f = INDS.find(x => x.id === id); return f ? f.n : id; });
+  return '<h2 style="margin-top:12px">正面对抗 · ' + esc(r.name) + '</h2>'
+    + '<div class="opt ' + (S.launched >= r.launched ? 'on' : '') + '">'
+    + '<div>' + res + '</div>'
+    + '<div class="sub">抢先上市 ' + (S.firstIn || 0) + ' 次'
+    + (inds.length ? ' · 对手抢下的适应症：' + inds.join('、') : ' · 对手尚未抢下适应症')
+    + '</div>'
+    + '<div class="sub">对手强度：' + S.diff.n + '难度基准，传承加成 +' + ((r.speed - 1) * 100).toFixed(0) + '%</div></div>';
+}
+function careerHTML(){
+  const list = loadRanks();
+  if (!list.length) return '';
+  const best = list.slice().sort((a, b) => b.net - a.net)[0];
+  const fasts = list.filter(x => x.firstQ > 0);
+  const fast = fasts.length ? fasts.slice().sort((a, b) => a.firstQ - b.firstQ)[0] : null;
+  const wins = list.filter(x => x.rvWin).length;
+  return '<h2 style="margin-top:12px">生涯数据</h2>'
+    + '<div class="opt"><div>已玩 ' + STATS.games + ' 局 · 累计点击 ' + num(STATS.clicks) + ' 次</div>'
+    + '<div class="sub">最好成绩 ' + f2(best.net) + ' 亿 · ' + best.tier + ' 级 · ' + best.rank
+    + (best.pos ? '（第 ' + best.pos + ' 位）' : '') + (best.co ? ' · ' + esc(best.co) : '') + '</div>'
+    + '<div class="sub">' + (fast
+        ? '最速上市：第 ' + fast.firstQ + ' 个季度（' + fast.diff + '难度）'
+        : '还没有产品上市过，下一局试试把资源集中在一个项目上') + '</div>'
+    + '<div class="sub">对抗竞争对手：' + wins + ' 胜 ' + (list.length - wins) + ' 负'
+    + ' · 成就 ' + (STATS.badges || []).length + '/' + BADGES.length
+    + ' · 传承点 ' + (STATS.legacy || 0) + '</div></div>';
+}
+function clearRanks(){
+  if (!confirm('清空本机历史榜？当前游戏存档、成就和传承点不受影响。')) return;
+  try{ localStorage.removeItem(RKEY); }catch(e){}
+  closeSheet();
+  log('本机历史榜已清空。', 'y');
+  render();
+}
+/* ========== 状态 ========== */
+let S = null, UID = 1;
+let PICK = {cands:[], ci:-1, ii:-1, name:''};
+let TMP = {co:''};
+document.addEventListener('click', function(){
+  STATS.clicks++;
+  if (STATS.clicks === 1000 && unlock('click1k') && S && !S.over) render();
+}, true);
+function newGame(k, co){
+  const d = DIFFS[k] || DIFFS.normal;
+  S = {co: co || '未命名生物科技', diff: d, q:1,
+       cash: d.cash + perkLv('cash') * 2, equity:0, finUsed:0,
+       team: perkLv('team2') ? 2 : 1,
+       exp:0, fails:0, launched:0, projects:[], marketed:[], logs:[],
+       mods:{pass:0,cost:1,speed:1,rev:1}, over:false, overReason:'',
+       result:null, recorded:false, newBadges:[],
+       clicks:0, firstQ:0, okStreak:0, perfect:false, rescued:false, firstIn:0,
+       perkPass: perkLv('pass') * 0.02,
+       pickN: perkLv('pick4') ? 4 : 3,
+       pendingLab:0, lastLabAway:0, gainLegacy:0, rival:null,
+       t0: Date.now(), lastSeen: Date.now()};
+  S.rival = genRival();
+  log('「' + S.co + '」成立（' + d.n + '难度）：账上 ' + f2(S.cash) + ' 亿，管线为零。点底部「立项」挑一个分子开始。', 'y');
+  log('⚔️ 情报：主要竞争对手是「' + S.rival.name + '」，已在 ' + S.rival.proj.ind.n + ' 方向立项。它会和你同步推进。', 'y');
+  if (perkLv('cash')) log('🧬 传承生效：启动资金 +' + (perkLv('cash') * 2) + ' 亿。', 'g');
+  if (perkLv('pass')) log('🧬 传承生效：全阶段基础通过率 +' + (perkLv('pass') * 2) + '%。', 'g');
+  if (perkLv('team2')) log('🧬 传承生效：团队开局即为 Lv2。', 'g');
+  if (perkLv('pick4')) log('🧬 传承生效：立项时可选 4 个候选分子。', 'g');
+  render();
+}
+function log(t, cls){
+  S.logs.unshift({t, cls: cls || ''});
+  if (S.logs.length > 60) S.logs.pop();
+}
+function toast(t){ log(t, 'y'); render(); }
+const pn = p => (p && (p.name || p.cand.code)) || '项目';
+/* ========== 存档 ========== */
+function save(){
+  try{
+    if (S){ S.lastSeen = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); }
+    localStorage.setItem(SKEY, JSON.stringify(STATS));
+  }catch(e){}
+}
+function load(){ try{ const s = localStorage.getItem(KEY); return s ? migrate(JSON.parse(s)) : null; }catch(e){ return null; } }
+function migrate(s){
+  if (!s.co) s.co = '未命名生物科技';
+  if (!s.diff) s.diff = DIFFS.normal;
+  if (!s.mods) s.mods = {pass:0,cost:1,speed:1,rev:1};
+  if (!Array.isArray(s.logs)) s.logs = [];
+  if (!Array.isArray(s.projects)) s.projects = [];
+  if (!Array.isArray(s.marketed)) s.marketed = [];
+  if (!Array.isArray(s.newBadges)) s.newBadges = [];
+  if (s.recorded == null) s.recorded = false;
+  if (s.overReason == null) s.overReason = '';
+  if (s.clicks == null) s.clicks = 0;
+  if (s.firstQ == null) s.firstQ = 0;
+  if (s.okStreak == null) s.okStreak = 0;
+  if (s.perfect == null) s.perfect = false;
+  if (s.rescued == null) s.rescued = false;
+  if (s.firstIn == null) s.firstIn = 0;
+  if (s.pendingLab == null) s.pendingLab = 0;
+  if (s.lastLabAway == null) s.lastLabAway = 0;
+  if (s.gainLegacy == null) s.gainLegacy = 0;
+  if (s.perkPass == null) s.perkPass = 0;
+  if (s.pickN == null) s.pickN = 3;
+  if (s.t0 == null) s.t0 = Date.now();
+  if (s.lastSeen == null) s.lastSeen = Date.now();
+  s.projects.forEach(p => {
+    if (p.name == null) p.name = '';
+    if (p.failed == null) p.failed = false;
+    if (p.spend == null) p.spend = 0;
+    if (p.stall == null) p.stall = 0;
+  });
+  s.marketed.forEach(m => {
+    if (m.share == null) m.share = 1;
+    if (!m.tier) m.tier = 'mid';
+    if (m.comp == null) m.comp = 0;
+    if (!m.id) m.id = 'm' + (UID++);
+    if (!m.indId){
+      const f = INDS.find(x => x.n === m.ind);
+      if (f) m.indId = f.id;
+    }
+  });
+  return s;
+}
+/* ========== 计算 ========== */
+const teamSpeed = () => 1 + (S.team - 1) * 0.06;
+function updateExp(){ S.exp = Math.min(0.18, S.fails * 0.03 + S.launched * 0.05); }
+function estRate(p, withMods){
+  const st = STAGES[p.stage];
+  let r = st.base * p.ind.coef * p.cand.pot + S.exp + (S.team - 1) * 0.015
+        + tierOf(p.tier).p + S.diff.pass + (S.perkPass || 0);
+  if (withMods) r += S.mods.pass;
+  return clamp(r, 0.03, 0.95);
+}
+function genCandidate(){
+  const m = MODALS[rnd(MODALS.length)];
+  const pot = [0.90, 1.00, 1.12][rnd(3)];
+  const cost = [0.90, 1.00, 1.15][rnd(3)];
+  return {code: m.pre + '-' + (1000 + rnd(9000)), mod: m.n, target: TARGETS[rnd(TARGETS.length)],
+          pot, cost, stars: pot === 1.12 ? 3 : (pot === 1.00 ? 2 : 1)};
+}
+/* ========== 渲染 ========== */
+function render(){
+  scanBadges();
+  const y = Math.floor((S.q - 1) / 4) + 1, qi = (S.q - 1) % 4 + 1;
+  $('#s-co').textContent = S.co || '未命名生物科技';
+  $('#s-ver').textContent = 'v3.6 · ' + S.diff.n + '难度';
+  $('#s-time').textContent = '第 ' + y + ' 年 Q' + qi;
+  rollTo($('#s-cash'), S.cash, v => f2(v));
+  $('#cash-box').className = 'stat' + (S.cash < 1 ? ' bad' : '');
+  rollTo($('#s-team'), S.team, v => 'Lv' + Math.round(v));
+  rollTo($('#s-fin'), FIN_ROUNDS.length - S.finUsed, v => Math.round(v) + ' 轮');
+  $('#exp-tip').textContent = '经验加成 +' + (S.exp * 100).toFixed(0) + '%';
+  $('#pipe-head').innerHTML = '<span>在研管线</span><span>'
+    + S.projects.filter(p => p.status !== 'launched').length + '/3 · 已上市 ' + S.launched + ' 个</span>';
+  const sl = $('#stat-line'), sl2 = $('#stat-line2');
+  if (sl && sl2){
+    sl.textContent = '本局点击 ' + num(S.clicks || 0) + ' 次';
+    sl2.textContent = '累计 ' + num(STATS.clicks) + ' 次 · 已玩 ' + STATS.games + ' 局';
+  }
+  renderOver(); renderFooter();
+  renderProjects(); renderRival(); renderMarket(); renderLog(); save();
+}
+function renderOver(){
+  const el = $('#over');
+  if (!el) return;
+  if (S.pendingLab > 0 && !S.over){
+    el.innerHTML = '<div class="card over tap" onclick="openLab()">'
+      + '<div class="code">🌙 实验台时 ' + S.pendingLab + ' 点待领取</div>'
+      + '<div class="sub">离线期间实验室连续运转，点这里决定投入研发还是变现。</div></div>';
+    return;
+  }
+  if (!S.over){ el.innerHTML = ''; return; }
+  const r = S.result || {};
+  el.innerHTML = '<div class="card over">'
+    + '<div class="code">本局已结束</div>'
+    + '<div class="sub">' + (S.overReason || '') + '</div>'
+    + '<div class="sub">成绩：' + (r.tier || '-') + ' 级 · ' + (r.rank || '—')
+    + ' · 股东权益 ' + f2(r.net || 0) + ' 亿 · '
+    + (r.pos ? '全球药企第 ' + r.pos + ' 位' : '未入榜') + '</div>'
+    + (r.newBadges && r.newBadges.length ? '<div class="sub">🏅 本局新解锁：' + r.newBadges.join('、') + '</div>' : '')
+    + '<div class="row"><button class="primary" onclick="reopenResult()">查看结算</button>'
+    + '<button class="ghost" onclick="restart()">成立新公司</button></div>'
+    + '</div>';
+}
+function renderFooter(){
+  const f = $('#bar');
+  if (!f) return;
+  f.innerHTML = S.over
+    ? '<button class="primary" style="grid-column:1 / -1" onclick="restart()">成立新公司 · 再来一局 ▶</button>'
+    : '<button class="primary" onclick="nextQuarter()">推进下一季度 ▶</button>'
+      + '<button onclick="openProject()">立项</button>'
+      + '<button onclick="openFinance()">融资</button>'
+      + '<button onclick="openHire()">扩招</button>';
+}
+function renderProjects(){
+  const list = S.projects.filter(p => p.status !== 'launched');
+  const el = $('#projects');
+  if (!list.length){
+    el.innerHTML = '<div class="card"><div class="sub">暂无在研项目。点底部「立项」选择候选分子开始研发（-' + IND_COST_INIT + ' 亿）。</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const st = STAGES[p.stage], t = tierOf(p.tier);
+    const stalled = p.status === 'stalled';
+    const need = st.need || 1;
+    const pct = clamp(p.progress / need * 100, 0, 100);
+    const remain = (!t.s || stalled) ? '—' : Math.max(1, Math.ceil((need - p.progress) / (t.s * teamSpeed())));
+    const title = p.name ? esc(p.name) : p.cand.code;
+    const tags = '<span class="tag">' + p.cand.code + '</span>' + (p.name ? '<span class="tag">' + p.cand.mod + '</span>' : '');
+    return '<div class="card ' + (stalled ? 'stalled' : '') + '">'
+      + '<div class="top"><div>'
+      +   '<div class="code">' + title + tags + '</div>'
+      +   '<div class="sub">靶点 ' + p.cand.target + ' · 成药性 ' + stars(p.cand.stars) + ' · 成本系数 ' + p.cand.cost.toFixed(2) + '</div>'
+      +   '<div class="sub">适应症 ' + p.ind.n + ' · 难度系数 ' + p.ind.coef + ' · 峰值收入 ' + p.ind.peak + ' 亿/年</div>'
+      + '</div><div class="badge ' + (stalled ? 'warn' : 'ok') + '">' + (stalled ? '暂缓待决' : st.n) + '</div></div>'
+      + '<div class="barline"><i style="width:' + (stalled ? 100 : pct) + '%"></i></div>'
+      + '<div class="sub">进度 ' + pct.toFixed(0) + '% · 本阶段参考通过率 ≈ ' + (estRate(p) * 100).toFixed(0)
+      +   '% · 预计还需 ' + remain + ' 个季度 · 已投入 ' + f2(p.spend) + ' 亿</div>'
+      + (stalled
+          ? '<div class="sub">复议失败即终止；' + p.stall + ' 个季度后窗口自动关闭。</div>'
+            + '<div class="row"><button class="primary" onclick="retry(\'' + p.id + '\')">补充数据复议（-' + RETRY_COST + ' 亿）</button>'
+            + '<button class="ghost" onclick="kill(\'' + p.id + '\')">终止项目</button></div>'
+          : '<div class="tiers">' + TIERS.map(t2 =>
+              '<button class="' + (p.tier === t2.k ? 'on' : '') + '" onclick="setTier(\'' + p.id + '\',\'' + t2.k + '\')">' + t2.n + '</button>'
+            ).join('') + '</div>')
+      + '</div>';
+  }).join('');
+}
+function renderRival(){
+  const el = $('#rival');
+  if (!el) return;
+  const r = S.rival;
+  if (!r || !r.proj){ el.innerHTML = ''; return; }
+  const ms = myStage(), rs = rivalStage();
+  const p = r.proj;
+  const gap = ms - rs;
+  const cls = gap > 0 ? 'ahead' : (gap < 0 ? 'behind' : '');
+  const mPct = ms < 0 ? 0 : clamp(ms / 8 * 100, 0, 100);
+  const rPct = clamp(rs / 8 * 100, 0, 100);
+  const cmpTxt = ms < 0 ? '你还没立项，对手已在跑'
+    : (gap > 0 ? '你领先 ' + gap + ' 个阶段'
+      : (gap === 0 ? '双方进度相当' : '你落后对手 ' + (-gap) + ' 个阶段'));
+  return '<div class="count"><span>⚔️ 最强竞争对手</span><span>' + esc(r.name) + '</span></div>'
+    + '<div class="card ' + cls + '">'
+    + '<div class="top"><div>'
+    +   '<div class="code">' + esc(r.name) + '<span class="tag">' + S.diff.n + '难度基准</span></div>'
+    +   '<div class="sub">在研：' + p.code + '（' + p.mod + '）· ' + p.ind.n + ' · ' + stName(p.stage) + '</div>'
+    +   '<div class="sub">对手已上市 ' + r.launched + ' 个产品</div>'
+    + '</div><div class="badge ' + (gap < 0 ? 'rv' : 'ok') + '">' + (gap < 0 ? '领先你' : '你领先') + '</div></div>'
+    + '<div class="vs me"><span>你</span><div class="vs-bar"><i style="width:' + mPct + '%"></i></div>'
+    +   '<span class="vs-n">' + stName(ms) + '</span></div>'
+    + '<div class="vs rv"><span>对手</span><div class="vs-bar"><i style="width:' + rPct + '%"></i></div>'
+    +   '<span class="vs-n">' + stName(rs) + '</span></div>'
+    + '<div class="sub">' + cmpTxt + ' · 抢先上市 ' + (S.firstIn || 0) + ' 次'
+    + (r.launchedInds.length ? ' · 对手已抢下 ' + r.launchedInds.length + ' 个适应症' : '') + '</div>'
+    + '</div>';
+}
+function renderMarket(){
+  const el = $('#market');
+  if (!S.marketed.length){ el.innerHTML = ''; return; }
+  const gross = S.marketed.reduce((a, m) => a + (m.lastGross || 0), 0);
+  const sg    = S.marketed.reduce((a, m) => a + (m.lastSg || 0), 0);
+  const net   = S.marketed.reduce((a, m) => a + (m.lastRev || 0), 0);
+  el.innerHTML = '<div class="count"><span>已上市产品</span><span>毛 ' + f2(gross) + ' · 费用 ' + f2(sg) + ' · 净 ' + f2(net) + ' 亿</span></div>'
+    + S.marketed.map(m => {
+      const t = salesOf(m.tier);
+      const trend = (t.def - SHARE_DECAY) * 100;
+      const threat = '●'.repeat(m.comp) + '○'.repeat(4 - m.comp);
+      return '<div class="card">'
+        + '<div class="top"><div class="code">' + esc(m.name) + '<span class="tag">' + m.ind + '</span>'
+        +   '<div class="sub">峰值年收入 ' + m.peak.toFixed(1) + ' 亿 · 上市 ' + m.q + ' 个季度 · 市场份额 '
+        +   (m.share * 100).toFixed(0) + '%</div>'
+        +   '<div class="sub">竞品威胁 ' + threat + (m.c3 ? '（已有竞品上市）' : '')
+        +   (m.q > 32 ? ' · 已过专利悬崖，收入降至 40%' : '') + '</div>'
+        + '</div><div class="badge ok">净 ' + f2(m.lastRev || 0) + ' 亿</div></div>'
+        + '<div class="sub">本季毛收入 ' + f2(m.lastGross || 0) + ' 亿 · 销售费用 ' + f2(m.lastSg || 0)
+        +   ' 亿（费用率 ' + (t.rate * 100).toFixed(0) + '%）</div>'
+        + '<div class="tiers three">' + SALES.map(x =>
+            '<button class="' + (m.tier === x.k ? 'on' : '') + '" onclick="setSales(\'' + m.id + '\',\'' + x.k + '\')">' + x.n + '</button>'
+          ).join('') + '</div>'
+        + '<div class="sub">份额趋势 ' + (trend >= 0 ? '+' : '') + trend.toFixed(1) + '%/季（'
+        + (trend >= 0 ? '防守成功' : '缓慢流失') + '）</div>'
+        + '</div>';
+    }).join('');
+}
+function renderLog(){
+  $('#log').innerHTML = S.logs.map(x => '<p class="' + x.cls + '">' + x.t + '</p>').join('');
+}
+function toggleLog(){ $('#log').classList.toggle('folded'); }
+function setSales(id, k){
+  const m = S.marketed.find(x => x.id === id);
+  if (!m) return;
+  m.tier = k; render();
+}
+/* ========== 离线实验台时 ========== */
+function openLab(){ sheetHTML(labSheet()); }
+function labSheet(){
+  const P = S.pendingLab || 0;
+  const inc = P * 0.08, cash = P * 0.05;
+  const hasProj = S.projects.some(p => p.status !== 'stalled');
+  return '<h2>🌙 夜间实验室报告</h2>'
+    + '<div class="sub">' + esc(S.co) + ' · 离线 ' + fmtSec(S.lastLabAway || 0)
+    + '，实验室连续运转，累计 <b class="kpi">' + P + '</b> 点实验台时。</div>'
+    + (S.rival ? '<div class="sub">⚔️ 同期情报：' + esc(S.rival.name) + ' 目前在 ' + S.rival.proj.ind.n
+        + ' 方向处于 ' + stName(S.rival.proj.stage) + '，已上市 ' + S.rival.launched + ' 个产品。</div>' : '')
+    + '<div class="opt on"><div>选择这批实验台时的用法</div>'
+    + '<div class="sub">投入研发：每个在研项目进度 +' + inc.toFixed(2) + '（仍需你自己推进季度才会判定）</div>'
+    + '<div class="sub">变现补贴：现金 +' + f2(cash) + ' 亿（折价换现金）</div></div>'
+    + '<div class="row">'
+    + '<button class="primary" ' + (hasProj ? '' : 'disabled') + ' onclick="useLab(\'rnd\')">投入研发</button>'
+    + '<button class="ghost" onclick="useLab(\'cash\')">变现补贴</button></div>'
+    + (hasProj ? '' : '<div class="sub">当前没有在研项目，只能变现。</div>');
+}
+function useLab(mode){
+  const P = S.pendingLab || 0;
+  if (P <= 0){ closeSheet(); return; }
+  if (mode === 'rnd'){
+    const act = S.projects.filter(p => p.status !== 'stalled');
+    if (!act.length){ toast('当前没有在研项目。'); return; }
+    const inc = P * 0.08;
+    act.forEach(p => { p.progress += inc; });
+    log('🌙 实验台时 ' + P + ' 点全部投入研发：' + act.length + ' 个在研项目各 +' + inc.toFixed(2) + ' 进度。', 'g');
+  } else {
+    const c = P * 0.05;
+    S.cash += c;
+    log('🌙 实验台时 ' + P + ' 点变现为 ' + f2(c) + ' 亿现金。', 'g');
+  }
+  S.pendingLab = 0;
+  closeSheet(); render();
+}
+/* ========== 操作：立项 ========== */
+function openProject(){
+  if (S.over) return;
+  const n = S.pickN || 3;
+  const cands = [];
+  for (let i = 0; i < n; i++) cands.push(genCandidate());
+  PICK = {cands, ci:-1, ii:-1, name:''};
+  drawProjectSheet();
+}
+function drawProjectSheet(){
+  const alive = S.projects.filter(p => p.status !== 'launched').length;
+  const ok = PICK.ci >= 0 && PICK.ii >= 0 && alive < 3 && S.cash >= IND_COST_INIT;
+  const rv = S.rival;
+  sheetHTML('<h2>立项：候选分子' + (PICK.cands.length === 4 ? '四选一' : '三选一') + '</h2>'
+    + '<div class="sub">选定分子与适应症，支付 ' + IND_COST_INIT + ' 亿立项费。当前管线 ' + alive + '/3。</div>'
+    + (rv ? '<div class="opt"><div>⚔️ 对手动向</div><div class="sub">' + esc(rv.name) + ' 正在做 '
+        + rv.proj.ind.n + '（' + stName(rv.proj.stage) + '）。选同一适应症意味着正面对撞。</div></div>' : '')
+    + PICK.cands.map((c, i) =>
+        '<div class="opt ' + (PICK.ci === i ? 'on' : '') + '" onclick="pickCand(' + i + ')">'
+        + '<div class="code">' + c.code + '<span class="tag">' + c.mod + '</span></div>'
+        + '<div class="sub">靶点 ' + c.target + ' · 成药性 ' + stars(c.stars) + ' · 研发成本系数 ' + c.cost.toFixed(2) + '</div></div>').join('')
+    + '<h2 style="margin-top:12px">选择适应症</h2>'
+    + INDS.map((x, i) => {
+        const clash = rv && rv.proj.ind.id === x.id;
+        const taken = rv && rv.launchedInds.indexOf(x.id) >= 0;
+        return '<div class="opt ' + (PICK.ii === i ? 'on' : '') + '" onclick="pickInd(' + i + ')">'
+          + '<div>' + x.n + (clash ? '<span class="tag" style="background:#3a1f1a;color:#ff9b7a">对手在做</span>' : '')
+          + (taken ? '<span class="tag" style="background:#3a2f0f;color:#ffcf5c">对手已上市</span>' : '') + '</div>'
+          + '<div class="sub">难度系数 ' + x.coef + '（越高越易通过）· 峰值年收入 ' + x.peak + ' 亿 · 成本系数 ' + x.cost + '</div></div>';
+      }).join('')
+    + '<h2 style="margin-top:12px">给项目起个名</h2>'
+    + '<input id="pname" type="text" maxlength="12" placeholder="例如：星海-01（可留空，默认用代号）" '
+    + 'oninput="PICK.name=this.value" value="' + esc(PICK.name || '') + '">'
+    + '<div class="row"><button class="primary" ' + (ok ? '' : 'disabled') + ' onclick="confirmProject()">确认立项（-' + IND_COST_INIT + ' 亿）</button>'
+    + '<button class="ghost" onclick="closeSheet()">取消</button></div>');
+}
+function pickCand(i){ PICK.ci = i; drawProjectSheet(); }
+function pickInd(i){ PICK.ii = i; drawProjectSheet(); }
+function confirmProject(){
+  if (PICK.ci < 0 || PICK.ii < 0) return;
+  if (S.cash < IND_COST_INIT){ toast('现金不足，无法支付立项费。'); return; }
+  if (S.projects.filter(p => p.status !== 'launched').length >= 3){ toast('管线已满（3 个）。'); return; }
+  const cand = PICK.cands[PICK.ci], ind = INDS[PICK.ii];
+  const nm = (PICK.name || '').trim();
+  S.cash -= IND_COST_INIT;
+  S.projects.push({id:'p' + (UID++), name:nm, cand, ind, stage:0, progress:0, tier:'mid',
+                   status:'active', retryUsed:false, failed:false, stall:0, spend:IND_COST_INIT});
+  log('立项：' + (nm ? '「' + esc(nm) + '」（' + cand.code + '）' : cand.code + '（' + cand.mod + '）')
+      + '针对 ' + ind.n + '，支付 ' + IND_COST_INIT + ' 亿。默认中投入，可在项目卡上调整档位。', 'g');
+  if (S.rival && S.rival.proj.ind.id === ind.id)
+    log('⚔️ 注意：' + S.rival.name + ' 也在做「' + ind.n + '」，这是一个正面赛道。', 'y');
+  closeSheet(); render();
+}
+/* ========== 操作：档位 / 复议 / 终止 ========== */
+function setTier(id, k){
+  const p = S.projects.find(x => x.id === id);
+  if (!p || p.status !== 'active') return;
+  p.tier = k; render();
+}
+function kill(id){
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  S.projects = S.projects.filter(x => x !== p);
+  S.fails++; updateExp(); S.okStreak = 0;
+  log('主动终止 ' + pn(p) + '。累计失败经验，后续项目通过率提升。', 'r');
+  render();
+}
+function retry(id){
+  const p = S.projects.find(x => x.id === id);
+  if (!p || p.status !== 'stalled') return;
+  if (S.cash < RETRY_COST){ toast('现金不足 ' + RETRY_COST + ' 亿，无法支付复议费用。'); return; }
+  S.cash -= RETRY_COST; p.retryUsed = true;
+  const st = STAGES[p.stage];
+  const rate = clamp(estRate(p, true) * 0.85, 0.03, 0.95);
+  const roll = Math.random() * 100, pass = roll <= rate * 100;
+  log('补充数据复议：' + pn(p) + ' ' + st.n + ' 通过率 ' + (rate * 100).toFixed(0)
+      + '%，掷出 ' + roll.toFixed(1) + ' → ' + (pass ? '通过 ✅' : '失败 ❌'), pass ? 'g' : 'r');
+  if (pass){
+    S.rescued = true;
+    p.status = 'active'; p.stall = 0; p.progress = 0;
+    advance(p);
+  } else {
+    S.projects = S.projects.filter(x => x !== p); S.fails++; updateExp(); S.okStreak = 0;
+    log(pn(p) + ' 复议失败，项目终止。', 'r');
+  }
+  render();
+}
+/* ========== 操作：融资 / 扩招 ========== */
+function openFinance(){
+  if (S.over) return;
+  sheetHTML('<h2>融资</h2><div class="sub">共 ' + FIN_ROUNDS.length + ' 轮机会，出让股权会稀释你最终的结算估值。</div>'
+    + FIN_ROUNDS.map((r, i) =>
+        '<div class="opt ' + (i === S.finUsed ? 'on' : '') + '">'
+        + '<div>第 ' + (i + 1) + ' 轮：+' + r.amt + ' 亿</div>'
+        + '<div class="sub">出让股权 ' + (r.eq * 100).toFixed(0) + '% · '
+        + (i < S.finUsed ? '已完成' : (i === S.finUsed ? '可进行' : '需先完成前一轮')) + '</div></div>').join('')
+    + '<div class="row"><button class="primary" ' + (S.finUsed < FIN_ROUNDS.length ? '' : 'disabled')
+    + ' onclick="doFinance()">执行第 ' + (S.finUsed + 1) + ' 轮融资</button>'
+    + '<button class="ghost" onclick="closeSheet()">关闭</button></div>');
+}
+function doFinance(){
+  if (S.finUsed >= FIN_ROUNDS.length) return;
+  const r = FIN_ROUNDS[S.finUsed];
+  S.cash += r.amt; S.equity += r.eq; S.finUsed++;
+  log('完成第 ' + S.finUsed + ' 轮融资：到账 +' + r.amt + ' 亿，累计出让股权 ' + (S.equity * 100).toFixed(0) + '%。', 'g');
+  closeSheet(); render();
+}
+function openHire(){
+  if (S.over) return;
+  const max = S.team >= MAX_TEAM;
+  const cost = max ? 0 : 0.4 + S.team * 0.3;
+  sheetHTML('<h2>扩招研发团队</h2>'
+    + '<div class="opt on"><div>当前 Lv' + S.team + '</div>'
+    + '<div class="sub">进度速度 ×' + teamSpeed().toFixed(2) + ' · 通过率 +' + ((S.team - 1) * 1.5).toFixed(1)
+    + '% · 季度薪资 ' + f2(0.06 * S.team) + ' 亿</div></div>'
+    + '<div class="sub">每升一级：进度速度 +6%、各阶段通过率 +1.5%，但每季度薪资增加 0.06 亿。上限 Lv' + MAX_TEAM + '。</div>'
+    + '<div class="row"><button class="primary" ' + (max || S.cash < cost ? 'disabled' : '')
+    + ' onclick="doHire()">' + (max ? '已达上限' : '升级到 Lv' + (S.team + 1) + '（-' + cost.toFixed(2) + ' 亿）') + '</button>'
+    + '<button class="ghost" onclick="closeSheet()">关闭</button></div>');
+}
+function doHire(){
+  if (S.team >= MAX_TEAM) return;
+  const cost = 0.4 + S.team * 0.3;
+  if (S.cash < cost){ toast('现金不足。'); return; }
+  S.cash -= cost; S.team++;
+  log('团队扩招至 Lv' + S.team + '，支出 ' + cost.toFixed(2) + ' 亿。', 'g');
+  closeSheet(); render();
+}
+/* ========== 推进季度 ========== */
+function nextQuarter(){
+  if (!S || S.over) return;
+  S.mods = {pass:0, cost:1, speed:1, rev:1};
+  const L = [];
+  S.projects = S.projects.filter(p => p.status !== 'launched');
+  if (Math.random() < S.diff.evt) L.push('【事件】' + fireEvent());
+  let gross = 0, sga = 0;
+  S.marketed.forEach(m => {
+    m.q++;
+    if (m.comp < 4 && Math.random() < 0.26) m.comp++;
+    if (m.comp >= 3 && !m.c3){ m.c3 = true; m.share *= 0.78; L.push('竞品获批上市：' + m.name + ' 市场份额承压（-22%）。'); }
+    if (m.comp >= 4 && !m.c4){ m.c4 = true; m.share *= 0.85; L.push('第二个竞品进入：' + m.name + ' 份额再降 15%。'); }
+    const t = salesOf(m.tier);
+    m.share = clamp(m.share - SHARE_DECAY + t.def, 0.25, 1.10);
+    let rev = m.peak / 4 * Math.min(1, m.q / 8) * m.share * S.mods.rev;
+    if (m.q > 32) rev *= 0.4;
+    const sg = rev * t.rate;
+    m.lastGross = rev; m.lastSg = sg; m.lastRev = rev - sg;
+    gross += rev; sga += sg;
+  });
+  const income = gross - sga;
+  if (gross > 0){
+    S.cash += income;
+    L.push('上市产品净回款 +' + f2(income) + ' 亿（毛收入 ' + f2(gross) + '，销售费用 ' + f2(sga) + '）。');
+  }
+  const salary = 0.06 * S.team;
+  S.cash -= salary;
+  L.push('团队 Lv' + S.team + ' 薪资 -' + f2(salary) + ' 亿。');
+  const dead = [];
+  S.projects.forEach(p => {
+    if (p.status === 'stalled'){
+      p.stall--;
+      if (p.stall <= 0){
+        dead.push(p); S.fails++; S.okStreak = 0;
+        L.push(pn(p) + ' 复议窗口关闭，项目终止，积累失败经验。');
+      } else {
+        L.push(pn(p) + ' 仍在暂缓待决（剩余 ' + p.stall + ' 个季度决策窗口）。');
+      }
+      return;
+    }
+    const st = STAGES[p.stage], t = tierOf(p.tier);
+    if (t.c === 0){ L.push(pn(p) + '（' + st.n + '）本季度暂停，进度冻结。'); return; }
+    const spend = st.cost * t.c * p.cand.cost * p.ind.cost * S.mods.cost;
+    S.cash -= spend; p.spend += spend;
+    p.progress += t.s * teamSpeed() * S.mods.speed;
+    L.push(pn(p) + '（' + st.n + '）投入 ' + f2(spend) + ' 亿，阶段进度 '
+         + Math.min(100, Math.round(p.progress / (st.need || 1) * 100)) + '%。');
+    if (p.progress >= st.need){
+      const rate = clamp(estRate(p, true), 0.03, 0.95);
+      const roll = Math.random() * 100;
+      if (roll <= rate * 100){
+        S.okStreak = (S.okStreak || 0) + 1;
+        L.push('🎲 ' + pn(p) + ' ' + st.n + ' 判定：通过率 ' + (rate * 100).toFixed(0)
+               + '%，掷出 ' + roll.toFixed(1) + ' → 通过 ✅');
+        if (S.okStreak >= 2)
+          L.push('🔥 连续第 ' + S.okStreak + ' 次判定通过，团队状态火热。', 'g');
+        advance(p);
+      } else {
+        S.okStreak = 0; p.failed = true;
+        if (st.clinical && !p.retryUsed){
+          p.status = 'stalled'; p.stall = 4;
+          L.push('🎲 ' + pn(p) + ' ' + st.n + ' 判定：通过率 ' + (rate * 100).toFixed(0)
+                 + '%，掷出 ' + roll.toFixed(1) + ' → 失败 ❌', 'r');
+          L.push(pn(p) + ' 进入「暂缓待决」：可付 ' + RETRY_COST + ' 亿补充数据复议一次（成功率 ×0.85），4 个季度后自动终止。', 'y');
+        } else {
+          dead.push(p); S.fails++;
+          L.push('🎲 ' + pn(p) + ' ' + st.n + ' 判定：通过率 ' + (rate * 100).toFixed(0)
+                 + '%，掷出 ' + roll.toFixed(1) + ' → 失败 ❌', 'r');
+          L.push(pn(p) + ' 项目终止，公司积累一次失败经验（后续通过率 +3%）。', 'r');
+        }
+      }
+    }
+  });
+  S.projects = S.projects.filter(p => dead.indexOf(p) < 0);
+  updateExp();
+  /* 竞争对手同步推进 */
+  rivalStep(L);
+  gapCheck(L);
+  S.q++;
+  if (S.cash < 0) return gameOver('资金链断裂，公司进入清算程序。');
+  if (S.q > MAX_Q) return gameOver('十年之期已到，公司进入期末结算。');
+  L.reverse().forEach(x => {
+    const msg = (typeof x === 'string') ? x : x.t;
+    const forced = (typeof x === 'string') ? '' : x.cls;
+    const cls = forced || ((msg.indexOf('❌') >= 0 || msg.indexOf('终止') >= 0 || msg.indexOf('落后') >= 0) ? 'r'
+              : (msg.indexOf('🎉') >= 0 || msg.indexOf('✅') >= 0 || msg.indexOf('经验') >= 0
+                 || msg.indexOf('领先') >= 0 || msg.indexOf('反超') >= 0) ? 'g' : '');
+    log(msg, cls);
+  });
+  render();
+}
+function advance(p){
+  p.stage++; p.progress = 0;
+  if (p.stage >= 8){
+    let peak = p.ind.peak * (0.85 + Math.random() * 0.3);
+    const ind = p.ind;
+    const rv = S.rival;
+    if (rv && rv.proj && rv.proj.ind.id === ind.id && rv.proj.stage < 8){
+      S.firstIn = (S.firstIn || 0) + 1;
+      peak *= 1.08;
+      log('🏁 抢先上市！你的产品先于 ' + rv.name + ' 在「' + ind.n + '」获批，首创新药溢价 +8%。', 'g');
+    } else if (rv && rv.launchedInds.indexOf(ind.id) >= 0){
+      peak *= 0.82;
+      log('⚠️ 「' + ind.n + '」已被 ' + rv.name + ' 抢得先机，本产品按 me-too 定价（峰值 -18%）。', 'y');
+    }
+    const nm = p.name || p.cand.code;
+    S.marketed.push({id:'m' + (UID++), name:nm, ind:ind.n, indId:ind.id, peak, q:0,
+                     share:1, tier:'mid', comp:0, c3:false, c4:false,
+                     lastRev:0, lastGross:0, lastSg:0});
+    S.launched++; p.status = 'launched';
+    if (!p.failed) S.perfect = true;
+    if (!S.firstQ) S.firstQ = S.q;
+    log('🎉 ' + (p.name ? '「' + esc(p.name) + '」（' + p.cand.code + '）' : p.cand.code)
+        + ' 获批上市！适应症 ' + ind.n + '，峰值年收入预期 ' + peak.toFixed(1)
+        + ' 亿。上市后记得在上市卡上选销售投入档位——不投就等着竞品抢份额。', 'g');
+  } else {
+    log(pn(p) + ' 通过，进入「' + STAGES[p.stage].n + '」。', 'g');
+  }
+  updateExp();
+}
+function fireEvent(){
+  const act = S.projects.filter(p => p.status === 'active');
+  const pool = [
+    () => { S.mods.pass += 0.06; return '监管窗口利好：本季度所有阶段通过率 +6%。'; },
+    () => { S.mods.cost *= 1.30; return 'CRO 涨价：本季度研发支出 +30%。'; },
+    () => { S.mods.cost *= 0.80; return '原料议价成功：本季度研发支出 -20%。'; },
+    () => { S.mods.speed *= 1.25; return '团队状态极佳：本季度项目进度 +25%。'; },
+    () => { S.cash += 0.80; return '学术大会数据亮眼，收到 BD 合作意向金 +0.80 亿。'; },
+    () => { S.cash -= 0.50; return 'GMP 飞行检查发现偏差，罚款 -0.50 亿。'; },
+    () => { S.cash -= 0.40; return '实验室设备故障，维修支出 -0.40 亿。'; }
+  ];
+  if (act.length) pool.push(() => {
+    const p = act[rnd(act.length)];
+    p.progress = Math.max(0, p.progress - 0.5);
+    return '核心研究员离职：' + pn(p) + ' 阶段进度回退 0.5 个季度。';
+  });
+  if (S.marketed.length) pool.push(() => { S.mods.rev *= 1.25; return '医保谈判成功：本季度上市产品毛收入 +25%。'; });
+  if (S.marketed.length) pool.push(() => { S.mods.rev *= 0.70; return '集采与专利挑战压力：本季度上市产品毛收入 -30%。'; });
+  if (S.marketed.length) pool.push(() => {
+    const m = S.marketed[rnd(S.marketed.length)];
+    m.peak *= 0.85; return '临床数据被竞品超越：' + m.name + ' 峰值收入预期下调 15%。';
+  });
+  if (S.marketed.length) pool.push(() => {
+    const m = S.marketed[rnd(S.marketed.length)];
+    m.comp = Math.min(4, m.comp + 1);
+    return '竞品进入审评加速通道：' + m.name + ' 竞品威胁 +1。';
+  });
+  return pool[rnd(pool.length)]();
+}
+/* ========== 期末结算 ========== */
+const LEGACY_GAIN = {E:1, D:1, C:2, B:3, A:5, S:8};
+function gameOver(reason){
+  S.over = true;
+  S.overReason = reason;
+  const pipe = S.projects.reduce((a, p) => a + p.ind.peak * 0.5 * (p.stage / 8), 0);
+  const mkt  = S.marketed.reduce((a, m) => a + m.peak * m.share * 1.2 * (m.q > 32 ? 0.5 : 1), 0);
+  const gross = S.cash + pipe + mkt;
+  const net = gross * (1 - S.equity);
+  const g = gradeOf(net);
+  const pos = rankPos(net);
+  const sec = Math.max(0, Math.round((Date.now() - (S.t0 || Date.now())) / 1000));
+  S.result = {gross, net, rank: g.rank, tier: g.tier, pos,
+              cash: S.cash, mkt, pipe, equity: S.equity,
+              launched: S.launched, fails: S.fails, team: S.team, exp: S.exp,
+              q: S.q, firstQ: S.firstQ || 0, clicks: S.clicks || 0, sec: sec};
+  if (!S.recorded){
+    S.recorded = true;
+    saveRank(S.result);
+    S.gainLegacy = LEGACY_GAIN[g.tier] || 1;
+    STATS.legacy = (STATS.legacy || 0) + S.gainLegacy;
+    saveStats();
+  }
+  render();
+  sheetHTML(resultSheet());
+}
+function resultSheet(){
+  const r = S.result || {};
+  return '<h2>期末结算 · ' + S.diff.n + '难度</h2>'
+    + '<div class="sub">' + esc(S.co) + ' · ' + (S.overReason || '') + '</div>'
+    + '<div class="opt on"><div>股东权益 <b class="kpi" data-n="' + (r.net || 0) + '" data-k="f2">0.00</b> 亿'
+    + ' · 评级 <b class="kpi pop">' + (r.tier || '-') + '</b> · ' + (r.rank || '—') + '</div>'
+    + '<div class="sub">行业名次：' + (r.pos ? '<b class="kpi" data-n="' + r.pos + '" data-k="rank">—</b>' : '未入榜（资不抵债）') + '</div>'
+    + '<div class="sub">本局点击 ' + num(S.clicks || 0) + ' 次 · 用时约 ' + fmtSec(r.sec)
+    + (r.firstQ ? ' · 首个产品第 ' + r.firstQ + ' 个季度上市' : ' · 本局没有产品上市') + '</div></div>'
+    + (r.newBadges && r.newBadges.length
+        ? '<div class="opt on"><div>🏅 本局新解锁</div><div class="sub">' + r.newBadges.join('、') + '</div></div>' : '')
+    + '<div class="opt on"><div>🧬 传承点 +' + (S.gainLegacy || 0) + '</div>'
+    + '<div class="sub">当前可用传承点 ' + (STATS.legacy || 0) + '。用它换永久加成，会带到之后每一局。</div>'
+    + '<div class="row"><button onclick="openLegacy()">打开传承商店</button></div></div>'
+    + '<div class="opt"><div>账面现金</div><div class="sub">' + f2(r.cash || 0) + ' 亿</div></div>'
+    + '<div class="opt"><div>已上市产品估值</div><div class="sub">' + f2(r.mkt || 0) + ' 亿（按峰值年收入 × 当前份额 × 1.2 倍）</div></div>'
+    + '<div class="opt"><div>在研管线估值</div><div class="sub">' + f2(r.pipe || 0) + ' 亿</div></div>'
+    + '<div class="opt"><div>累计出让股权</div><div class="sub">' + ((r.equity || 0) * 100).toFixed(0) + '%</div></div>'
+    + '<div class="opt"><div>其他</div><div class="sub">上市产品 ' + (r.launched || 0) + ' 个 · 终止项目 ' + (r.fails || 0)
+    + ' 个 · 团队 Lv' + (r.team || 1) + ' · 经验加成 +' + ((r.exp || 0) * 100).toFixed(0) + '%</div></div>'
+    + versusHTML()
+    + progressHTML()
+    + '<h2 style="margin-top:12px">成就徽章</h2>' + badgesHTML()
+    + '<h2 style="margin-top:12px">本机历史榜</h2>' + ranksHTML()
+    + careerHTML()
+    + '<div class="row"><button class="primary" onclick="restart()">成立新公司 · 再来一局</button>'
+    + '<button class="ghost" onclick="closeSheet()">看看棋盘</button></div>';
+}
+function reopenResult(){ sheetHTML(resultSheet()); }
+function restart(){
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  if (S) TMP.co = S.co || '';
+  closeSheet(); startSheet();
+}
+/* ========== 开局 / 弹层 ========== */
+function startSheet(){
+  const lvSum = PERKS.map(p => perkLv(p.k)).reduce((a, b) => a + b, 0);
+  sheetHTML('<h2>新药风云 v3.6</h2>'
+    + '<div class="sub">先给公司起个名字（会一直显示在页面顶部），再选难度。开局后会生成一家竞争对手，和你同步跑管线。</div>'
+    + '<input id="co" type="text" maxlength="14" placeholder="例如：星海生物" '
+    + 'oninput="TMP.co=this.value" value="' + esc(TMP.co || '') + '">'
+    + Object.keys(DIFFS).map(k => {
+        const d = DIFFS[k];
+        const rv = ({easy:'偏慢', normal:'正常', hard:'较快'})[k] || '正常';
+        return '<div class="opt" onclick="startGame(\'' + k + '\')">'
+          + '<div>' + d.n + '难度</div>'
+          + '<div class="sub">初始现金 ' + (d.cash + perkLv('cash') * 2) + ' 亿 · 各阶段通过率 '
+          + (d.pass >= 0 ? '+' : '') + Math.round(d.pass * 100) + '% · 随机事件频率 '
+          + Math.round(d.evt * 100) + '% · 对手推进速度 ' + rv + '</div></div>';
+      }).join('')
+    + '<div class="opt ' + (STATS.legacy > 0 ? 'on' : '') + '"><div>🧬 传承点：' + (STATS.legacy || 0)
+    + ' 点 · 已购加成 ' + lvSum + ' 级</div>'
+    + '<div class="row"><button class="primary" onclick="openLegacy()">传承商店</button></div></div>');
+}
+function startGame(k){
+  const co = (TMP.co || '').trim() || '未命名生物科技';
+  TMP.co = co;
+  closeSheet();
+  newGame(k, co);
+}
+function sheetHTML(html){
+  $('#sheet').innerHTML = html;
+  $('#modal').classList.remove('hidden');
+  animateSheet();
+}
+function closeSheet(){ $('#modal').classList.add('hidden'); }
+function openRules(){
+  sheetHTML('<h2>玩法说明</h2>'
+    + '<div class="opt"><div>目标</div><div class="sub">把项目从靶点推到上市，第 40 季度做期末结算，看股东权益评级（含股权稀释）。</div></div>'
+    + '<div class="opt"><div>公司名与项目名</div><div class="sub">开局给公司起名，立项时给项目起名。名字不影响数值，但结算和历史榜里都会用到。</div></div>'
+    + '<div class="opt on"><div>⚔️ 竞争对手</div><div class="sub">开局生成一家对标公司，它有独立管线，每季度和你同步推进。它会优先瞄准你正在做的适应症（约 45% 概率）；它先在某个适应症上市，你之后在该适应症上市的产品按 me-too 折价（峰值 -18%）；反过来你先上市拿到首创新药溢价（+8%），并记一次「抢先上市」。它上市的产品如果对上你已上市的同类产品，会直接给对手产品加一格竞品威胁、扣 8% 份额。难度越高它越快，你的传承等级也会让它略微提速。</div></div>'
+    + '<div class="opt"><div>难度</div><div class="sub">新手：现金 10 亿、通过率 +8%、事件少、对手偏慢；标准：现金 8 亿、对手正常；硬核：现金 6 亿、通过率 -7%、事件频繁、对手较快。</div></div>'
+    + '<div class="opt"><div>节奏</div><div class="sub">每季度为每个在研项目选投入档位（暂停/低/中/高），点「推进下一季度」结算：扣钱、涨进度、掷骰判定，对手同步往前走一步。</div></div>'
+    + '<div class="opt"><div>通过率</div><div class="sub">阶段基础通过率 × 适应症难度系数 × 候选分子成药性，再加减团队、经验、传承加成、投入档位与难度修正，区间锁定在 3%～95%。</div></div>'
+    + '<div class="opt"><div>复议</div><div class="sub">临床 I/II/III 期失败会进入「暂缓待决」，可付 1.2 亿补充数据再搏一次（成功率 ×0.85，仅一次），4 个季度不决策自动终止。</div></div>'
+    + '<div class="opt"><div>上市后</div><div class="sub">收入 = 峰值年收入 ÷ 4 × 爬坡系数 × 市场份额。份额每季度被动流失 1.2%，销售投入档位可防守（中 +1.0%、高 +2.2%），但要按毛收入的 12%/20%/30% 付销售费用。</div></div>'
+    + '<div class="opt"><div>竞品</div><div class="sub">每个上市产品都有 4 格竞品威胁，会随时间累积；第 3 格触发竞品上市（份额 -22%），第 4 格再 -15%。竞争对手上市同类产品会额外推进威胁。份额下限 25%。</div></div>'
+    + '<div class="opt"><div>经验</div><div class="sub">每终止一个项目，后续所有项目通过率 +3%；每上市一个产品 +5%，上限 +18%。</div></div>'
+    + '<div class="opt on"><div>🌙 离线实验室</div><div class="sub">关掉页面后实验室仍在运转：每离线 10 分钟攒 1 点实验台时，最多攒 18 点（约 3 小时封顶）。回来后在弹窗里二选一——投入研发（每个在研项目进度 +0.08×点数）或变现补贴（每点 0.05 亿）。报告里还会附上对手的同期动向。判定仍需你自己点「推进下一季度」。</div></div>'
+    + '<div class="opt on"><div>🧬 传承点</div><div class="sub">每局结算按评级发传承点（E/D 1 点、C 2 点、B 3 点、A 5 点、S 8 点）。传承商店里可换：启动资金 +2 亿/级、基础通过率 +2%/级、候选分子四选一、开局团队 Lv2。加成永久保留。</div></div>'
+    + '<div class="opt on"><div>🏅 成就与统计</div><div class="sub">页面底部一直显示本局点击次数和累计点击数。结算时除了评级、全球名次和对抗结果，还会自动和你自己的上一局比：收益、名次、评级、上市速度。这些数据都只存在你这台设备上。</div></div>'
+    + '<h2 style="margin-top:12px">成就徽章</h2>' + badgesHTML()
+    + '<h2 style="margin-top:12px">本机历史榜</h2>' + ranksHTML()
+    + careerHTML()
+    + '<div class="row"><button class="primary" onclick="openLegacy()">传承商店</button>'
+    + '<button class="ghost" onclick="closeSheet()">知道了</button></div>'
+    + '<div class="row"><button class="ghost" onclick="restart()">重新开始</button>'
+    + '<button class="ghost" onclick="clearRanks()">清空本机排行榜</button></div>');
+}
+/* ========== PWA ========== */
+function initPWA(){
+  try{
+    const c = document.createElement('canvas'); c.width = c.height = 512;
+    const g = c.getContext('2d');
+    g.fillStyle = '#0b0f1a'; g.fillRect(0, 0, 512, 512);
+    const grd = g.createLinearGradient(0, 0, 512, 512);
+    grd.addColorStop(0, '#4f8cff'); grd.addColorStop(1, '#7c5cff');
+    g.fillStyle = grd; g.beginPath(); g.arc(256, 256, 196, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#fff'; g.font = 'bold 250px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('药', 256, 272);
+    const icon = c.toDataURL('image/png');
+    const al = document.createElement('link'); al.rel = 'apple-touch-icon'; al.href = icon;
+    document.head.appendChild(al);
+    const mf = {name:'新药风云 · 从靶点到上市', short_name:'新药风云', start_url:'./',
+      scope:'./', display:'standalone', orientation:'portrait',
+      background_color:'#0b0f1a', theme_color:'#0b0f1a',
+      icons:[{src:icon, sizes:'512x512', type:'image/png', purpose:'any maskable'}]};
+    const blob = new Blob([JSON.stringify(mf)], {type:'application/manifest+json'});
+    const ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = URL.createObjectURL(blob);
+    document.head.appendChild(ml);
+  }catch(e){}
+}
+/* ========== 启动 ========== */
+function boot(){
+  initPWA();
+  loadStats();
+  TMP.co = '';
+  const s = load();
+  if (s){
+    S = s;
+    const now = Date.now();
+    const away = Math.max(0, (now - (S.lastSeen || now)) / 1000);
+    S.t0 = now;
+    if (!S.rival) S.rival = genRival();          /* 老存档补一个对手 */
+    if (!Array.isArray(S.rival.launchedInds)) S.rival.launchedInds = [];
+    if (S.rival.lastGap === undefined) S.rival.lastGap = null;
+    if (!S.rival.proj) S.rival.proj = genRivalProj(S.rival);
+    if (S.firstIn == null) S.firstIn = 0;
+    const lab = clamp(Math.floor(away / 600), 0, 18);
+    if (!S.over && lab > 0){
+      S.pendingLab = (S.pendingLab || 0) + lab;
+      S.lastLabAway = away;
+    } else if (S.over){
+      S.pendingLab = 0;
+    }
+    render();
+    if (S.over && S.result){
+      sheetHTML(resultSheet());
+    } else if (S.pendingLab > 0){
+      sheetHTML(labSheet());
+    } else {
+      const y = Math.floor((S.q - 1) / 4) + 1, qi = (S.q - 1) % 4 + 1;
+      sheetHTML('<h2>欢迎回来，「' + esc(S.co) + '」</h2>'
+        + '<div class="sub">进度：第 ' + y + ' 年 Q' + qi + ' · 现金 ' + f2(S.cash)
+        + ' 亿 · 已上市 ' + S.launched + ' 个产品。</div>'
+        + (S.rival ? '<div class="sub">⚔️ ' + esc(S.rival.name) + ' 当前在 ' + S.rival.proj.ind.n
+            + ' 方向处于 ' + stName(S.rival.proj.stage) + '，已上市 ' + S.rival.launched + ' 个。</div>' : '')
+        + '<div class="sub">你已玩 ' + STATS.games + ' 局 · 累计点击 ' + num(STATS.clicks)
+        + ' 次 · 成就 ' + (STATS.badges || []).length + '/' + BADGES.length
+        + ' · 传承点 ' + (STATS.legacy || 0) + '</div>'
+        + '<div class="row"><button class="primary" onclick="closeSheet()">继续经营</button>'
+        + '<button class="ghost" onclick="restart()">成立新公司</button></div>');
+    }
+  } else {
+    startSheet();
+  }
+}
+boot();
+</script>
+</body>
+  </html>
